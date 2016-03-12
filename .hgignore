@@ -1,0 +1,8 @@
+^\.
+pip-selfcheck.json
+bin
+include
+lib
+config.ini
+\.sqlite
+\.pyc
