@@ -5,8 +5,17 @@
 import React from "react";
 
 const Folder = React.createClass({
+  onClick(event) {
+    this.props.selectFolder(this.props.folder);
+  },
+
   render() {
-    return <li>{this.props.folder.fields.name}<FolderContents folders={this.props.folders} folderKey={this.props.folder.pk}/></li>;
+    let className = "folder";
+    if (this.props.selected == this.props.folder) {
+      className += " selected";
+    }
+
+    return <li className={className}><span onClick={this.onClick} className="label">{this.props.folder.fields.name}</span><FolderContents {...this.props} folderKey={this.props.folder.pk}/></li>;
   }
 });
 
@@ -16,8 +25,9 @@ const FolderContents = React.createClass({
     if (subfolders.length == 0) {
       return null;
     }
+
     return <ul>
-      {subfolders.map((f) => <Folder key={f.pk} folders={this.props.folders} folder={f}/>)}
+      {subfolders.map((f) => <Folder key={f.pk} {...this.props} folder={f}/>)}
     </ul>;
   }
 });
@@ -25,13 +35,17 @@ const FolderContents = React.createClass({
 export default React.createClass({
   render() {
     let virtuals = this.props.virtualFolders.filter(f => f.fields.parent == null);
+    let props = {
+      selectFolder: this.props.onSelectFolder,
+      selected: this.props.selectedFolder,
+    };
     return <div className="folderlist">
-      <ul>
+      <ul onClick={this.onClick}>
         <li>
           All Photos
-          <FolderContents folders={this.props.physicalFolders} folderKey={null}/>
+          <FolderContents {...props} folders={this.props.physicalFolders} folderKey={null}/>
         </li>
-        {virtuals.map(f => <Folder key={f.pk} folders={this.props.virtualFolders} folder={f}/>)}
+        {virtuals.map(f => <Folder key={f.pk} {...props} folders={this.props.virtualFolders} folder={f}/>)}
       </ul>
     </div>;
   }

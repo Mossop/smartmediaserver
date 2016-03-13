@@ -33,25 +33,42 @@ const App = React.createClass({
   componentDidMount() {
     fetchJSON("/physicalfolder/list").then(data => {
       this.setState({ physicalFolders: data });
-      console.log("Got state 1", data);
     }, console.error);
 
     fetchJSON("/virtualfolder/list").then(data => {
       this.setState({ virtualFolders: data });
-      console.log("Got state 2", data);
     }, console.error);
+  },
+
+  selectFolder(folder) {
+    console.log("select", folder);
+    this.setState({ selectedFolder: folder, selectedPhoto: null });
+
+    if (!folder.photos) {
+      let model = folder.model.substring(8);
+      fetchJSON(`/${model}/${folder.pk}/photos`).then(photos => {
+        folder.photos = photos;
+        this.setState({ selectedFolder: folder });
+      }, console.error);
+    }
+  },
+
+  selectPhoto(photo) {
+    this.setState({ selectedPhoto: photo });
   },
 
   render() {
     if ((this.state.physicalFolders == null) || (this.state.virtualFolders == null)) {
       return <div id="appcontent">
-        <CircularProgress size={2} />
+        <div className="flex-center">
+          <CircularProgress size={2} />
+        </div>
       </div>;
     }
 
     return <div id="appcontent">
-      <FolderList {...this.state}/>
-      <ContentArea/>
+      <FolderList {...this.state} onSelectFolder={this.selectFolder}/>
+      <ContentArea {...this.state} onSelectPhoto={this.selectPhoto}/>
     </div>;
   }
 });

@@ -13,6 +13,10 @@ html, body, #app {
   justify-content: center;
 }
 
+.flex-center {
+  align-self: center;
+}
+
 .folderlist {
   width: 400px;
   overflow: auto;
@@ -21,4 +25,24 @@ html, body, #app {
 
 .contentarea {
   flex: 1;
+  overflow-y: auto;
+}
+
+.contentarea.loading, .contentarea.photo {
+  display: flex;
+  flex-direction: vertical;
+  justify-content: center;
+  align-items: center;
+}
+
+.grid {
+  margin: auto;
+}
+
+.grid > div {
+  float: left;
+}
+
+.folder.selected > .label {
+  background: blue;
 }
