@@ -6,5 +6,8 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    url(r"^$", views.index, name="index")
+    url(r"^$", views.index, name="index"),
+    url(r"^physicalfolder/list$", views.physicalfolders, name="physicalfolders"),
+    url(r"^virtualfolder/list$", views.virtualfolders, name="virtualfolders"),
+    url(r"^photo/get/(?P<photo_id>[0-9]+)$", views.photo, name="photo")
 ]
