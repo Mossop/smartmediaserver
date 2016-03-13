@@ -42,7 +42,7 @@ class Photo(models.Model):
                                on_delete=models.CASCADE,
                                related_name="photos")
     name = models.CharField(max_length=200)
-    path = models.CharField(max_length=1000)
+    path = models.CharField(max_length=1000, unique=True)
 
 class VirtualFolderPhotos(models.Model):
     folder = models.ForeignKey(VirtualFolder,
