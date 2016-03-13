@@ -1,8 +1,12 @@
 ^\.
 pip-selfcheck.json
+npm-debug.log
 bin
 include
 lib
 config.ini
 \.sqlite
 \.pyc
+website/static/website/build
+node_modules
+public
