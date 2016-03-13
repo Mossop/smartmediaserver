@@ -5,6 +5,16 @@
 import React from "react";
 
 const Folder = React.createClass({
+  getInitialState() {
+    return {
+      open: true
+    };
+  },
+
+  toggle() {
+    this.setState({ open: !this.state.open });
+  },
+
   onClick(event) {
     this.props.selectFolder(this.props.folder);
   },
@@ -15,7 +25,18 @@ const Folder = React.createClass({
       className += " selected";
     }
 
-    return <li className={className}><span onClick={this.onClick} className="label">{this.props.folder.fields.name}</span><FolderContents {...this.props} folderKey={this.props.folder.pk}/></li>;
+    if (this.state.open) {
+      return <li className={className}>
+        <i className="fa fa-folder-open" onClick={this.toggle}></i>
+        <span onClick={this.onClick} className="label">{this.props.folder.fields.name}</span>
+        <FolderContents {...this.props} folderKey={this.props.folder.pk}/>
+      </li>;
+    } else {
+      return <li className={className}>
+        <i className="fa fa-folder" onClick={this.toggle}></i>
+        <span onClick={this.onClick} className="label">{this.props.folder.fields.name}</span>
+      </li>;
+    }
   }
 });
 
@@ -35,16 +56,24 @@ const FolderContents = React.createClass({
 export default React.createClass({
   render() {
     let virtuals = this.props.virtualFolders.filter(f => f.fields.parent == null);
+    let fakeRoot = {
+      folders: this.props.physicalFolders,
+      folder: {
+        pk: null,
+        fields: {
+          name: "All Photos"
+        }
+      },
+    };
+
     let props = {
       selectFolder: this.props.onSelectFolder,
       selected: this.props.selectedFolder,
     };
+
     return <div className="folderlist">
       <ul onClick={this.onClick}>
-        <li>
-          All Photos
-          <FolderContents {...props} folders={this.props.physicalFolders} folderKey={null}/>
-        </li>
+        <Folder {...fakeRoot} {...props}/>
         {virtuals.map(f => <Folder key={f.pk} {...props} folders={this.props.virtualFolders} folder={f}/>)}
       </ul>
     </div>;

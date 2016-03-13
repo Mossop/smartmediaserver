@@ -11,12 +11,12 @@ import FolderList from "./folderlist";
 import ContentArea from "./contentarea";
 
 async function fetchJSON(url) {
-  let response = await(fetch(url));
+  let response = await fetch(url);
   if (!response.ok) {
     throw new Error(response.statusText);
   }
 
-  return await(response.json());
+  return await response.json();
 }
 
 const App = React.createClass({

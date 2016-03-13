@@ -5,6 +5,7 @@
 import React from "react";
 
 import CircularProgress from "material-ui/lib/circular-progress";
+import Paper from "material-ui/lib/paper";
 
 const Thumbnail = React.createClass({
   onClick() {
@@ -13,33 +14,43 @@ const Thumbnail = React.createClass({
 
   render() {
     let src = `/photo/${this.props.photo.pk}/thumbnail/150`;
-    return <div className="thumbnail">
-      <img onClick={this.onClick} src={src} />
-    </div>;
+    return <Paper zDepth={2}>
+      <div className="thumbnail">
+        <img onClick={this.onClick} src={src} />
+      </div>
+    </Paper>;
+  }
+});
+
+const Photo = React.createClass({
+  render() {
+    let src = `/photo/${this.props.photo.pk}/download`;
+    return <img src={src}/>
   }
 });
 
 export default React.createClass({
   render() {
     if (this.props.selectedPhoto) {
-      let src = `/photo/${this.props.selectedPhoto.pk}/download`;
       return <div className="contentarea photo">
-        <img src={src} />
+        <Photo photo={this.props.selectedPhoto}/>
       </div>;
-    } else if (this.props.selectedFolder && this.props.selectedFolder.photos) {
+    } else if (this.props.selectedFolder) {
+      if (!this.props.selectedFolder.photos) {
+        return <div className="contentarea loading">
+          <div className="flex-center">
+            <CircularProgress size={2} />
+          </div>
+        </div>;
+      }
+
       return <div className="contentarea folder">
         <div className="grid">
           {this.props.selectedFolder.photos.map(p => <Thumbnail key={p.pk} selectPhoto={this.props.onSelectPhoto} photo={p}/>)}
         </div>
       </div>;
-    } else {
-      return <div className="contentarea"></div>;
     }
 
-    return <div className="contentarea loading">
-      <div className="flex-center">
-        <CircularProgress size={2} />
-      </div>
-    </div>;
+    return <div className="contentarea"></div>;
   }
 });
