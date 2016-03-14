@@ -21,6 +21,10 @@ def get_model(model):
         return PhysicalFolder
     if model == "virtualfolder":
         return VirtualFolder
+    if model == "tag":
+        return Tag
+    if model == "person":
+        return Person
     raise Http404("Model %s does not exist" % model)
 
 def index(request):

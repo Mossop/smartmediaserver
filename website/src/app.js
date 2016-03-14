@@ -46,6 +46,8 @@ const AppState = {
     hierarchies: [
       makeHierarchy("physicalfolder", "All Photos"),
       makeHierarchy("virtualfolder", "Virtual Folders"),
+      makeHierarchy("tag", "Tags"),
+      makeHierarchy("person", "People"),
     ],
     photos: new Map()
   },
