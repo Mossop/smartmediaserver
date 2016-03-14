@@ -9,10 +9,15 @@ export default React.createClass({
     this.props.selectPhoto(null);
   },
 
+  componentDidMount() {
+    let rect = this.refs.frame.getBoundingClientRect();
+    this.refs.image.setAttribute("src", `/photo/${this.props.photo.pk}/shrink/to/fit/${rect.width}x${rect.height}`);
+  },
+
   render() {
     return <div className="overlay" onClick={this.onClick}>
-      <div className="photoframe">
-        <img src={`/photo/${this.props.photo.pk}/download`}/>
+      <div ref="frame" className="photoframe">
+        <a href={`/photo/${this.props.photo.pk}/download`}><img ref="image" /></a>
       </div>
     </div>;
   }

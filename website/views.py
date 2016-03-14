@@ -1,11 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import os
 
 from django.http import HttpResponse, Http404
 from django.views.decorators.http import last_modified
 from django.shortcuts import render, get_object_or_404
 from django.core import serializers
+from django.core.files import File
 
 from website.models import *
 
@@ -49,13 +51,25 @@ def photo_thumbnail(request, photo_id, size):
     response = HttpResponse(content_type="image/jpeg")
     im = Image.open(photo.path)
     im.thumbnail((size, size))
-    im.save(response, "JPEG")
+    im.save(response, "JPEG", optimize=True, quality=95, icc_profile=im.info.get('icc_profile'))
+    return response
+
+@last_modified(photo_modified)
+def photo_shrink_to_fit(request, photo_id, width, height):
+    width = int(width)
+    height = int(height)
+    photo = get_object_or_404(Photo, pk=photo_id)
+    response = HttpResponse(content_type="image/jpeg")
+    im = Image.open(photo.path)
+    im.thumbnail((width, height))
+    im.save(response, "JPEG", optimize=True, quality=95, icc_profile=im.info.get('icc_profile'))
     return response
 
 @last_modified(photo_modified)
 def photo_download(request, photo_id):
     photo = get_object_or_404(Photo, pk=photo_id)
-    response = HttpResponse(content_type="image/jpeg")
-    im = Image.open(photo.path)
-    im.save(response, "JPEG")
+    filename = photo.path
+    wrapper = File(file(filename))
+    response = HttpResponse(wrapper, content_type="image/jpeg")
+    response['Content-Length'] = os.path.getsize(photo.path)
     return response
