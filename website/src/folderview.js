@@ -41,7 +41,7 @@ const FolderThumbnail = React.createClass({
 
 export default React.createClass({
   render() {
-    let parent = this.props.hierarchy.folders.get(this.props.folder.fields.parent)
+    let parent = this.props.hierarchy.folders.get(this.props.folder.fields.parent);
     if (!parent && this.props.folder != this.props.hierarchy.root) {
       parent = this.props.hierarchy.root;
     }

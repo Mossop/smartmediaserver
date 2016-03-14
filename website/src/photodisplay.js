@@ -4,8 +4,6 @@
 
 import React from "react";
 
-import Paper from 'material-ui/lib/paper';
-
 export default React.createClass({
   onClick() {
     this.props.selectPhoto(null);
