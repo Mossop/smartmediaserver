@@ -11,8 +11,23 @@ from website.management.command import UICommand
 
 from optparse import make_option
 
+from PIL import Image
+
 class Command(UICommand):
     help = "Update an existing repository."
+
+    def scan_photo(self, folder, path):
+        try:
+            im = Image.open(path)
+        except:
+            return
+
+        try:
+            photo = Photo.objects.get(path=path)
+        except ObjectDoesNotExist:
+            self.info("Adding photo %s." % path)
+            photo = Photo(folder=folder, name=os.path.basename(path), path=path)
+            photo.save()
 
     def scan_folder(self, folder):
         self.info("Scanning %s..." % folder.path)
@@ -28,14 +43,8 @@ class Command(UICommand):
                     nextfolder = PhysicalFolder(parent=folder, name=name, path=path)
                     nextfolder.save()
                 self.scan_folder(nextfolder)
-                pass
             elif os.path.isfile(path):
-                try:
-                    photo = Photo.objects.get(path=path)
-                except ObjectDoesNotExist:
-                    self.info("Adding photo %s." % path)
-                    photo = Photo(folder=folder, name=name, path=path)
-                    photo.save()
+                self.scan_photo(folder, path)
 
         oldphotos = list(Photo.objects.filter(folder=folder).exclude(name__in=names))
         for photo in oldphotos:

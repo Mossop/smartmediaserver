@@ -14,12 +14,15 @@ html, body, #app, #appcontent {
 
 #maincontent {
   flex: 1;
-  display: flex;
   position: relative;
 }
 
 .folderview {
-  flex: 1;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
   overflow-y: auto;
 }
 
@@ -27,7 +30,7 @@ html, body, #app, #appcontent {
   width: 200px;
   height: 200px;
   margin: 10px;
-  float: left;
+  display: inline-block;
 }
 
 .viewtile.folder {

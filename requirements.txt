@@ -4,3 +4,4 @@ ExifRead
 IPTCInfo
 python-xmp-toolkit
 paste
+Pillow
