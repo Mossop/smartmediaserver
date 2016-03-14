@@ -5,10 +5,19 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import CircularProgress from "material-ui/lib/circular-progress";
+import injectTapEventPlugin from 'react-tap-event-plugin';
 
-import FolderList from "./folderlist";
-import ContentArea from "./contentarea";
+// Needed for onTouchTap
+// Can go away when react 1.0 release
+// Check this repo:
+// https://github.com/zilverline/react-tap-event-plugin
+injectTapEventPlugin();
+
+import AppBar from 'material-ui/lib/app-bar';
+
+import FolderNav from "./foldernav";
+import FolderView from "./folderview";
+import PhotoDisplay from "./photodisplay";
 
 async function fetchJSON(url) {
   let response = await fetch(url);
@@ -19,37 +28,108 @@ async function fetchJSON(url) {
   return await response.json();
 }
 
+function makeHierarchy(model, name) {
+  return {
+    root: {
+      pk: null,
+      model: `website.${model}`,
+      fields: {
+        name,
+      }
+    },
+    folders: new Map()
+  };
+}
+
+const AppState = {
+  data: {
+    hierarchies: [
+      makeHierarchy("physicalfolder", "All Photos"),
+      makeHierarchy("virtualfolder", "Virtual Folders"),
+    ],
+    photos: new Map()
+  },
+
+  getHierarchy(folder) {
+    for (let hierarchy of this.data.hierarchies) {
+      if (hierarchy.root.model == folder.model) {
+        return hierarchy;
+      }
+    }
+    return null;
+  },
+
+  async fetchFolderPhotos(folder) {
+    if (!folder.pk) {
+      return;
+    }
+
+    try {
+      let model = folder.model.substring(8);
+      let json = await fetchJSON(`/${model}/${folder.pk}/photos`);
+
+      let photos = [];
+      for (let photo of json) {
+        if (!this.data.photos.has(photo.pk)) {
+          this.data.photos.set(photo.pk, photo);
+        }
+        photos.push(photo.pk);
+      }
+
+      folder.photos = photos;
+      renderApp();
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  async fetchHierarchy(hierarchy) {
+    try {
+      let model = hierarchy.root.model.substring(8);
+      let json = await fetchJSON(`/${model}/list`);
+      let folders = new Map();
+      for (let photo of json) {
+        folders.set(photo.pk, photo);
+      }
+
+      hierarchy.folders = folders;
+      renderApp();
+    } catch (e) {
+      console.error(e);
+    }
+  },
+};
+
 const App = React.createClass({
   getInitialState() {
     return {
-      physicalFolders: null,
-      virtualFolders: null,
-      photos: null,
-      selectedFolder: null,
+      navOpen: false,
+      selectedHierarchy: AppState.data.hierarchies[0],
+      selectedFolder: AppState.data.hierarchies[0].root,
       selectedPhoto: null,
     };
   },
 
   componentDidMount() {
-    fetchJSON("/physicalfolder/list").then(data => {
-      this.setState({ physicalFolders: data });
-    }, console.error);
+    for (let hierarchy of this.props.hierarchies) {
+      AppState.fetchHierarchy(hierarchy);
+    }
+  },
 
-    fetchJSON("/virtualfolder/list").then(data => {
-      this.setState({ virtualFolders: data });
-    }, console.error);
+  toggleNav() {
+    this.setState({ navOpen: !this.state.navOpen });
   },
 
   selectFolder(folder) {
-    console.log("select", folder);
-    this.setState({ selectedFolder: folder, selectedPhoto: null });
+    this.setState({
+      navOpen: false,
+      selectedHierarchy: AppState.getHierarchy(folder),
+      selectedFolder: folder,
+      selectedPhoto: null
+    });
 
     if (!folder.photos) {
-      let model = folder.model.substring(8);
-      fetchJSON(`/${model}/${folder.pk}/photos`).then(photos => {
-        folder.photos = photos;
-        this.setState({ selectedFolder: folder });
-      }, console.error);
+      AppState.fetchFolderPhotos(folder);
     }
   },
 
@@ -58,22 +138,23 @@ const App = React.createClass({
   },
 
   render() {
-    if ((this.state.physicalFolders == null) || (this.state.virtualFolders == null)) {
-      return <div id="appcontent">
-        <div className="flex-center">
-          <CircularProgress size={2} />
-        </div>
-      </div>;
+    let photoView = "";
+    if (this.state.selectedPhoto) {
+      photoView = <PhotoDisplay folder={this.state.selectedFolder} photo={this.state.selectedPhoto} selectPhoto={this.selectPhoto}/>;
     }
-
     return <div id="appcontent">
-      <FolderList {...this.state} onSelectFolder={this.selectFolder}/>
-      <ContentArea {...this.state} onSelectPhoto={this.selectPhoto}/>
+      <AppBar title={this.state.selectedFolder.fields.name} onLeftIconButtonTouchTap={this.toggleNav} />
+      <FolderNav {...this.props} open={this.state.navOpen} toggleNav={this.toggleNav} selectFolder={this.selectFolder} />
+      <div id="maincontent">
+        <FolderView {...this.props} folder={this.state.selectedFolder} hierarchy={this.state.selectedHierarchy} selectFolder={this.selectFolder} selectPhoto={this.selectPhoto} />
+        {photoView}
+      </div>
     </div>;
   }
 });
 
-ReactDOM.render(
-  <App/>,
-  document.getElementById("app")
-);
+function renderApp() {
+  ReactDOM.render(<App {...AppState.data}/>, document.getElementById("app"));
+}
+
+renderApp();

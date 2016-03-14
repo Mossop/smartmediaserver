@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import render, get_object_or_404
 from django.core import serializers
 
@@ -10,34 +10,28 @@ from website.models import *
 
 from PIL import Image
 
+def JsonResponse(objects):
+    return HttpResponse(
+        serializers.serialize("json", objects),
+        content_type="application/json"
+    )
+
+def get_model(model):
+    if model == "physicalfolder":
+        return PhysicalFolder
+    if model == "virtualfolder":
+        return VirtualFolder
+    raise Http404("Model %s does not exist" % model)
+
 def index(request):
     return render(request, "website/index.html")
 
-def physicalfolders_list(request):
-    return HttpResponse(
-        serializers.serialize("json", PhysicalFolder.objects.all()),
-        content_type="application/json"
-    )
+def hierarchy_list(request, model):
+    return JsonResponse(get_model(model).objects.all())
 
-def physicalfolders_photos(request, folder_id):
-    folder = get_object_or_404(PhysicalFolder, pk=folder_id)
-    return HttpResponse(
-        serializers.serialize("json", folder.photos.all()),
-        content_type="application/json"
-    )
-
-def virtualfolders_list(request):
-    return HttpResponse(
-        serializers.serialize("json", VirtualFolder.objects.all()),
-        content_type="application/json"
-    )
-
-def virtualfolders_photos(request, folder_id):
-    folder = get_object_or_404(VirtualFolder, pk=folder_id)
-    return HttpResponse(
-        serializers.serialize("json", folder.photos.all()),
-        content_type="application/json"
-    )
+def folder_photos(request, model, folder_id):
+    folder = get_object_or_404(get_model(model), pk=folder_id)
+    return JsonResponse(folder.photos.all())
 
 def photo_thumbnail(request, photo_id, size):
     size = int(size)

@@ -11,6 +11,7 @@
     "material-ui": "^0.15.0-alpha.1",
     "react": "^0.14.7",
     "react-dom": "^0.14.7",
-    "react-tap-event-plugin": "^0.2.2"
+    "react-tap-event-plugin": "^0.2.2",
+    "watchify": "^3.7.0"
   }
 }
