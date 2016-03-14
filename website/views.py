@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from django.http import HttpResponse, Http404
+from django.views.decorators.http import last_modified
 from django.shortcuts import render, get_object_or_404
 from django.core import serializers
 
@@ -37,6 +38,11 @@ def folder_photos(request, model, folder_id):
     folder = get_object_or_404(get_model(model), pk=folder_id)
     return JsonResponse(folder.photos.all())
 
+def photo_modified(request, photo_id, **kwargs):
+    photo = get_object_or_404(Photo, pk=photo_id)
+    return photo.mtime
+
+@last_modified(photo_modified)
 def photo_thumbnail(request, photo_id, size):
     size = int(size)
     photo = get_object_or_404(Photo, pk=photo_id)
@@ -46,6 +52,7 @@ def photo_thumbnail(request, photo_id, size):
     im.save(response, "JPEG")
     return response
 
+@last_modified(photo_modified)
 def photo_download(request, photo_id):
     photo = get_object_or_404(Photo, pk=photo_id)
     response = HttpResponse(content_type="image/jpeg")
