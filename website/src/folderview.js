@@ -14,9 +14,9 @@ const PhotoThumbnail = React.createClass({
 
   render() {
     return <div className="viewtile photo" onClick={this.onClick}>
-      <GridTile title={this.props.photo.fields.name}>
+      <GridTile title={this.props.photo.name}>
         <div className="viewtilecontent">
-          <img src={`/photo/${this.props.photo.pk}/thumbnail/200`}/>
+          <img src={this.props.photo.getThumbnailURL(200)}/>
         </div>
       </GridTile>
     </div>;
@@ -30,7 +30,7 @@ const FolderThumbnail = React.createClass({
 
   render() {
     return <div className="viewtile folder" onClick={this.onClick}>
-      <GridTile title={this.props.folder.fields.name}>
+      <GridTile title={this.props.folder.name}>
         <div className="viewtilecontent">
           <FontIcon className="material-icons" style={{ fontSize: 96 }}>{this.props.children}</FontIcon>
         </div>
@@ -41,19 +41,15 @@ const FolderThumbnail = React.createClass({
 
 export default React.createClass({
   render() {
-    let parent = this.props.hierarchy.folders.get(this.props.folder.fields.parent);
-    if (!parent && this.props.folder != this.props.hierarchy.root) {
-      parent = this.props.hierarchy.root;
-    }
-    let subfolders = Array.from(this.props.hierarchy.folders.values()).filter(f => f.fields.parent == this.props.folder.pk);
+    let parent = this.props.folder.parentFolder;
     let photos = this.props.folder.photos ?
-                 this.props.folder.photos.map(pk => this.props.photos.get(pk)) :
+                 this.props.folder.photos :
                  [];
 
     return <div className="folderview">
-      {parent ? <FolderThumbnail key={`folder-${parent.pk}`} folder={parent} selectFolder={this.props.selectFolder}>arrow_back</FolderThumbnail> : ""}
-      {subfolders.map((f) => <FolderThumbnail key={`folder-${f.pk}`} folder={f} selectFolder={this.props.selectFolder}>folder</FolderThumbnail>)}
-      {photos.map((p) => <PhotoThumbnail key={`photo-${p.pk}`} photo={p} selectPhoto={this.props.selectPhoto} />)}
+      {parent ? <FolderThumbnail key={`folder-${parent.id}`} folder={parent} selectFolder={this.props.selectFolder}>arrow_back</FolderThumbnail> : ""}
+      {this.props.folder.subfolders.map((f) => <FolderThumbnail key={`folder-${f.id}`} folder={f} selectFolder={this.props.selectFolder}>folder</FolderThumbnail>)}
+      {photos.map((p) => <PhotoThumbnail key={`photo-${p.id}`} photo={p} selectPhoto={this.props.selectPhoto} />)}
     </div>;
   }
 });

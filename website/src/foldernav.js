@@ -14,14 +14,14 @@ const FolderItem = React.createClass({
   },
 
   render() {
-    return <MenuItem leftIcon={<FontIcon className="material-icons">folder</FontIcon>} onTouchTap={this.onClick}>{this.props.folder.fields.name}</MenuItem>;
+    return <MenuItem leftIcon={<FontIcon className="material-icons">folder</FontIcon>} onTouchTap={this.onClick}>{this.props.folder.name}</MenuItem>;
   }
 });
 
 export default React.createClass({
   render() {
     return <LeftNav docked={false} open={this.props.open} onRequestChange={this.props.toggleNav}>
-      {this.props.hierarchies.map((h, i) => <FolderItem key={i} folder={h.root} selectFolder={this.props.selectFolder} />)}
+      {this.props.roots.map((r, i) => <FolderItem key={i} folder={r} selectFolder={this.props.selectFolder} />)}
     </LeftNav>;
   }
 });

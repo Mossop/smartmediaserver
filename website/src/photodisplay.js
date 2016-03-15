@@ -11,13 +11,13 @@ export default React.createClass({
 
   componentDidMount() {
     let rect = this.refs.frame.getBoundingClientRect();
-    this.refs.image.setAttribute("src", `/photo/${this.props.photo.pk}/shrink/to/fit/${rect.width}x${rect.height}`);
+    this.refs.image.setAttribute("src", this.props.photo.getResizedURL(rect.width, rect.height));
   },
 
   render() {
     return <div className="overlay" onClick={this.onClick}>
       <div ref="frame" className="photoframe">
-        <a href={`/photo/${this.props.photo.pk}/download`}><img ref="image" /></a>
+        <a href={this.props.photo.getDirectURL()}><img ref="image" /></a>
       </div>
     </div>;
   }
