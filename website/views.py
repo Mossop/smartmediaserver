@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import os
+import json
 
 from django.http import HttpResponse, Http404
 from django.views.decorators.http import last_modified
@@ -33,12 +34,34 @@ def get_model(model):
 def index(request):
     return render(request, "website/index.html")
 
-def hierarchy_list(request, model):
-    return JsonResponse(get_model(model).objects.all())
+def root_list(request):
+    roots = [
+        { "model": "physicalfolder", "name": "All Photos" },
+        { "model": "tag", "name": "Tags" },
+        { "model": "person", "name": "People" }
+    ]
+    return HttpResponse(json.dumps(roots), content_type="application/json")
 
-def folder_photos(request, model, folder_id):
-    folder = get_object_or_404(get_model(model), pk=folder_id)
-    return JsonResponse(folder.photos.all())
+def root_contents(request, model):
+    model = get_model(model)
+    if model == Person:
+        subfolders = model.objects.all()
+    else:
+        subfolders = model.objects.filter(parent__isnull=True)
+    return JsonResponse(subfolders)
+
+def folder_contents(request, model, folder_id):
+    model = get_model(model)
+    folder = get_object_or_404(model, pk=folder_id)
+
+    if model == Person:
+        subfolders = []
+    else:
+        subfolders = list(model.objects.filter(parent=folder))
+
+    photos = list(folder.photos.all())
+
+    return JsonResponse(subfolders + photos)
 
 def photo_modified(request, photo_id, **kwargs):
     photo = get_object_or_404(Photo, pk=photo_id)

@@ -22,22 +22,16 @@ import FolderView from "./folderview";
 import PhotoDisplay from "./photodisplay";
 
 const AppState = {
-  roots: smartmedia.getRoots(),
+  roots: []
 };
 
 const App = React.createClass({
   getInitialState() {
     return {
       navOpen: false,
-      selectedFolder: AppState.roots[0],
+      selectedFolder: null,
       selectedPhoto: null,
     };
-  },
-
-  componentDidMount() {
-    for (let root of this.props.roots) {
-      renderAfter(root.loadFolders());
-    }
   },
 
   toggleNav() {
@@ -45,15 +39,14 @@ const App = React.createClass({
   },
 
   selectFolder(folder) {
+    console.log("Select folder", folder.id, folder.name);
     this.setState({
       navOpen: false,
       selectedFolder: folder,
       selectedPhoto: null
     });
 
-    if (!folder.photos) {
-      renderAfter(folder.loadPhotos());
-    }
+    renderAfter(folder.loadContents());
   },
 
   selectPhoto(photo) {
@@ -65,8 +58,9 @@ const App = React.createClass({
     if (this.state.selectedPhoto) {
       photoView = <PhotoDisplay folder={this.state.selectedFolder} photo={this.state.selectedPhoto} selectPhoto={this.selectPhoto}/>;
     }
+    let name = this.state.selectedFolder ? this.state.selectedFolder.name : "Smart Media";
     return <div id="appcontent">
-      <AppBar title={this.state.selectedFolder.name} onLeftIconButtonTouchTap={this.toggleNav} />
+      <AppBar title={name} onLeftIconButtonTouchTap={this.toggleNav} />
       <FolderNav {...this.props} open={this.state.navOpen} toggleNav={this.toggleNav} selectFolder={this.selectFolder} />
       <div id="maincontent">
         <FolderView {...this.props} folder={this.state.selectedFolder} selectFolder={this.selectFolder} selectPhoto={this.selectPhoto} />
@@ -76,12 +70,13 @@ const App = React.createClass({
   }
 });
 
-function renderApp() {
-  ReactDOM.render(<App {...AppState}/>, document.getElementById("app"));
+async function renderAfter(promise) {
+  try {
+    await promise;
+    ReactDOM.render(<App {...AppState}/>, document.getElementById("app"));
+  } catch (e) {
+    console.error(e);
+  }
 }
 
-function renderAfter(promise) {
-  promise.then(renderApp).catch(e => console.error(e));
-}
-
-renderApp();
+renderAfter(smartmedia.loadRoots().then(r => AppState.roots = r));

@@ -24,6 +24,15 @@ class DjangoObject {
   }
 }
 
+function convertObject(root, parent, json) {
+  switch (json.model) {
+    case "website.photo":
+      return getPhoto(json);
+    default:
+      return new Folder(root, parent, json);
+  }
+}
+
 class Photo extends DjangoObject {
   constructor(json) {
     super(json);
@@ -55,68 +64,52 @@ function getPhoto(json) {
 }
 
 class Folder extends DjangoObject {
-  constructor(root, json = undefined) {
+  constructor(root = null, parent = null, json = null) {
     super(json);
     this.root = root;
-    this.photos = null;
+    this.parent = parent;
+    this.contents = [];
   }
 
-  async loadPhotos() {
-    let json = await fetchJSON(`/${this.root.model}/${this.id}/photos`);
-    this.photos = json.map(getPhoto);
+  get contentURL() {
+    return `/${this.root.model}/${this.id}/contents`;
   }
 
-  get parentFolder() {
-    if (!this.parent) {
-      return this.root;
-    }
-    for (let f of this.root.folders) {
-      if (f.id == this.parent) {
-        return f;
-      }
-    }
-    return null;
+  async loadContents() {
+    let json = await fetchJSON(this.contentURL);
+    this.contents = json.map(o => convertObject(this.root, this, o));
   }
 
   get subfolders() {
-    return this.root.folders.filter(f => f.parent == this.id);
+    return this.contents.filter(i => i instanceof Folder);
+  }
+
+  get photos() {
+    return this.contents.filter(i => i instanceof Photo);
   }
 }
 
 class Root extends Folder {
   constructor(model, name) {
-    super(null);
-    this.id = null;
+    super();
+    this.root = this;
+    this.id = model;
     this.model = model;
     this.name = name;
-    this.folders = [];
   }
 
-  async loadPhotos() {
-  }
-
-  async loadFolders() {
-    let json = await fetchJSON(`/${this.model}/list`);
-    this.folders = json.map(f => new Folder(this, f));
+  get contentURL() {
+    return `/${this.model}/contents`;
   }
 
   get parentFolder() {
     return null;
   }
-
-  get subfolders() {
-    return this.folders.filter(f => f.parent == null);
-  }
 }
 
-const ROOTS = [
-  new Root("physicalfolder", "All Photos"),
-  new Root("tag", "Tags"),
-  new Root("person", "People")
-];
-
 module.exports = {
-  getRoots() {
-    return ROOTS;
+  async loadRoots() {
+    let json = await fetchJSON(`/list/roots`);
+    return json.map(r => new Root(r.model, r.name));
   }
 };

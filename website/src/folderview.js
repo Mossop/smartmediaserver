@@ -41,14 +41,18 @@ const FolderThumbnail = React.createClass({
 
 export default React.createClass({
   render() {
-    let parent = this.props.folder.parentFolder;
-    let photos = this.props.folder.photos ?
-                 this.props.folder.photos :
-                 [];
+    let parent = null;
+    let photos = [];
+    let folders = this.props.roots;
+    if (this.props.folder) {
+      parent = this.props.folder.parent;
+      photos = this.props.folder.photos;
+      folders = this.props.folder.subfolders;
+    }
 
     return <div className="folderview">
       {parent ? <FolderThumbnail key={`folder-${parent.id}`} folder={parent} selectFolder={this.props.selectFolder}>arrow_back</FolderThumbnail> : ""}
-      {this.props.folder.subfolders.map((f) => <FolderThumbnail key={`folder-${f.id}`} folder={f} selectFolder={this.props.selectFolder}>folder</FolderThumbnail>)}
+      {folders.map((f) => <FolderThumbnail key={`folder-${f.id}`} folder={f} selectFolder={this.props.selectFolder}>folder</FolderThumbnail>)}
       {photos.map((p) => <PhotoThumbnail key={`photo-${p.id}`} photo={p} selectPhoto={this.props.selectPhoto} />)}
     </div>;
   }
