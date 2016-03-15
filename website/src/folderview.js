@@ -14,7 +14,7 @@ const PhotoThumbnail = React.createClass({
 
   render() {
     return <div className="viewtile photo" onClick={this.onClick}>
-      <GridTile title={this.props.photo.name}>
+      <GridTile title={this.props.photo.filename}>
         <div className="viewtilecontent">
           <img src={this.props.photo.getThumbnailURL(200)}/>
         </div>

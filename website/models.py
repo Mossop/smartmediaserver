@@ -1,34 +1,47 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import os
 
 from django.db import models
 
-class PhysicalFolder(models.Model):
+class Folder(models.Model):
     parent = models.ForeignKey("self",
                                null=True, blank=True,
                                on_delete=models.CASCADE,
                                related_name="children",
                                related_query_name="child")
     name = models.CharField(max_length=200)
-    path = models.CharField(max_length=1000, unique=True)
 
     class Meta:
         unique_together = ("parent", "name")
+        abstract = True
 
     def __unicode__(self):
         return self.name
 
-class VirtualFolder(models.Model):
-    parent = models.ForeignKey("self",
-                               null=True, blank=True,
-                               on_delete=models.CASCADE,
-                               related_name="children",
-                               related_query_name="child")
+class PhysicalFolder(Folder):
+    @property
+    def path(self):
+        if self.parent:
+            return os.path.join(self.parent.path, self.name)
+        else:
+            return self.physicalfolderroot.path
+
+class PhysicalFolderRoot(PhysicalFolder):
+    physicalpath = models.CharField(max_length=255, unique=True)
+
+    class Meta:
+        pass
+
+    @property
+    def path(self):
+        return self.physicalpath
+
+class VirtualFolder(Folder):
     photos = models.ManyToManyField("Photo",
                                     related_name="virtual_folders",
                                     through="VirtualFolderPhotos")
-    name = models.CharField(max_length=200)
     index = models.IntegerField()
 
     class Meta:
@@ -37,26 +50,17 @@ class VirtualFolder(models.Model):
     def __unicode__(self):
         return self.name
 
-class Tag(models.Model):
-    parent = models.ForeignKey("self",
-                               null=True, blank=True,
-                               on_delete=models.CASCADE,
-                               related_name="children",
-                               related_query_name="child")
-    name = models.CharField(max_length=200)
+class Tag(Folder):
+    pass
 
-    class Meta:
-        unique_together = ("parent", "name")
-
-class Person(models.Model):
-    name = models.CharField(max_length=200, unique=True)
+class Person(Folder):
+    pass
 
 class Photo(models.Model):
     folder = models.ForeignKey(PhysicalFolder,
                                on_delete=models.CASCADE,
                                related_name="photos")
-    name = models.CharField(max_length=200)
-    path = models.CharField(max_length=1000, unique=True)
+    filename = models.CharField(max_length=200)
     mtime = models.DateTimeField()
 
     width = models.IntegerField(null=True, blank=True)
@@ -75,6 +79,13 @@ class Photo(models.Model):
 
     tags = models.ManyToManyField(Tag, related_name="photos")
     people = models.ManyToManyField(Person, related_name="photos")
+
+    class Meta:
+        unique_together = ("folder", "filename")
+
+    @property
+    def path(self):
+        return os.path.join(self.folder.path, self.filename)
 
 class VirtualFolderPhotos(models.Model):
     folder = models.ForeignKey(VirtualFolder,

@@ -135,7 +135,9 @@ class Command(UICommand):
             creators = read_array(consts.XMP_NS_DC, "creator")
             photo.author = ", ".join(creators)
 
-    def scan_photo(self, folder, path):
+    def scan_photo(self, folder, name):
+        path = os.path.join(folder.path, name)
+
         try:
             im = Image.open(path)
         except Exception as err:
@@ -144,7 +146,7 @@ class Command(UICommand):
         stats = os.stat(path)
 
         try:
-            photo = Photo.objects.get(path=path)
+            photo = Photo.objects.get(folder=folder, filename=name)
             mtime = pytz.utc.localize(datetime.utcfromtimestamp(stats.st_mtime))
             if mtime == photo.mtime:
                 return
@@ -154,7 +156,7 @@ class Command(UICommand):
         except ObjectDoesNotExist:
             self.status("Adding photo %s." % path)
 
-        photo = Photo(folder=folder, path=path, name=os.path.basename(path))
+        photo = Photo(folder=folder, filename=name)
         photo.mtime = pytz.utc.localize(datetime.utcfromtimestamp(stats.st_mtime))
         (photo.width, photo.height) = im.size
         photo.save()
@@ -181,16 +183,16 @@ class Command(UICommand):
             path = os.path.join(folder.path, name)
             if os.path.isdir(path):
                 try:
-                    nextfolder = PhysicalFolder.objects.get(path=path)
+                    nextfolder = PhysicalFolder.objects.get(parent=folder, name=name)
                 except ObjectDoesNotExist:
                     self.info("Adding folder %s." % path)
-                    nextfolder = PhysicalFolder(parent=folder, name=name, path=path)
+                    nextfolder = PhysicalFolder(parent=folder, name=name)
                     nextfolder.save()
                 self.scan_folder(nextfolder)
             elif os.path.isfile(path):
-                self.scan_photo(folder, path)
+                self.scan_photo(folder, name)
 
-        oldphotos = list(Photo.objects.filter(folder=folder).exclude(name__in=names))
+        oldphotos = list(Photo.objects.filter(folder=folder).exclude(filename__in=names))
         for photo in oldphotos:
             photo.delete()
 
@@ -199,6 +201,6 @@ class Command(UICommand):
             oldfolder.delete()
 
     def handle(self, *args, **kwargs):
-        roots = PhysicalFolder.objects.filter(parent__isnull=True)
+        roots = PhysicalFolderRoot.objects.all()
         for root in roots:
             self.scan_folder(root)

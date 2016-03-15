@@ -25,5 +25,5 @@ class Command(UICommand):
             raise CommandError("\"%s\" is not a directory." % path)
 
         self.info("Adding \"%s\" as %s." % (path, name))
-        folder = PhysicalFolder(parent=None, name=name, path=path)
+        folder = PhysicalFolderRoot(name=name, physicalpath=path)
         folder.save()
