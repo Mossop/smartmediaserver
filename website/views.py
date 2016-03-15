@@ -44,22 +44,15 @@ def root_list(request):
 
 def root_contents(request, model):
     model = get_model(model)
-    if model == Person:
-        subfolders = model.objects.all()
-    else:
-        subfolders = model.objects.filter(parent__isnull=True)
+    subfolders = model.objects.filter(parent__isnull=True)
     return JsonResponse(subfolders)
 
 def folder_contents(request, model, folder_id):
     model = get_model(model)
     folder = get_object_or_404(model, pk=folder_id)
 
-    if model == Person:
-        subfolders = []
-    else:
-        subfolders = list(model.objects.filter(parent=folder))
-
-    photos = list(folder.photos.all())
+    subfolders = list(model.objects.filter(parent=folder).order_by("name"))
+    photos = list(folder.photos.all().order_by("captured"))
 
     return JsonResponse(subfolders + photos)
 
