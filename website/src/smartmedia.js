@@ -39,7 +39,7 @@ class Photo extends DjangoObject {
   }
 
   getDirectURL() {
-    return `/photo/${this.id}/download`;
+    return this.url;
   }
 
   getResizedURL(width, height) {

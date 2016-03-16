@@ -7,16 +7,23 @@ import json
 from django.http import HttpResponse, Http404
 from django.views.decorators.http import last_modified
 from django.shortcuts import render, get_object_or_404
-from django.core import serializers
+from django.core.serializers.json import Serializer
 from django.core.files import File
 
 from website.models import *
 
 from PIL import Image
 
+class JsonSerializer(Serializer):
+    def get_dump_object(self, obj):
+        data = super(JsonSerializer, self).get_dump_object(obj)
+        if isinstance(obj, Photo):
+            data["fields"]["url"] = obj.url
+        return data
+
 def JsonResponse(objects):
     return HttpResponse(
-        serializers.serialize("json", objects),
+        JsonSerializer().serialize(objects),
         content_type="application/json"
     )
 

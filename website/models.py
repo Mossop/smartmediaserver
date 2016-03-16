@@ -4,6 +4,7 @@
 import os
 
 from django.db import models
+from django.core.urlresolvers import reverse
 
 class Folder(models.Model):
     parent = models.ForeignKey("self",
@@ -28,8 +29,18 @@ class PhysicalFolder(Folder):
         else:
             return self.physicalfolderroot.path
 
+    @property
+    def url(self):
+        if self.parent:
+            if self.parent.url:
+                return "%s%s/" % (self.parent.url, self.name)
+            return None
+        else:
+            return self.physicalfolderroot.url
+
 class PhysicalFolderRoot(PhysicalFolder):
     physicalpath = models.CharField(max_length=255, unique=True)
+    directurl = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         pass
@@ -37,6 +48,10 @@ class PhysicalFolderRoot(PhysicalFolder):
     @property
     def path(self):
         return self.physicalpath
+
+    @property
+    def url(self):
+        return self.directurl
 
 class VirtualFolder(Folder):
     photos = models.ManyToManyField("Photo",
@@ -86,6 +101,12 @@ class Photo(models.Model):
     @property
     def path(self):
         return os.path.join(self.folder.path, self.filename)
+
+    @property
+    def url(self):
+        if self.folder.url:
+            return "%s%s" % (self.folder.url, self.filename)
+        return reverse("download-photo", kwargs={ "photo_id": self.pk })
 
 class VirtualFolderPhotos(models.Model):
     folder = models.ForeignKey(VirtualFolder,

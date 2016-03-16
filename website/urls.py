@@ -12,5 +12,5 @@ urlpatterns = [
     url(r"^(?P<model>physicalfolder|virtualfolder|tag|person)/(?P<folder_id>[0-9]+)/contents$", views.folder_contents),
     url(r"^photo/(?P<photo_id>[0-9]+)/thumbnail/(?P<size>[0-9]+)$", views.photo_thumbnail),
     url(r"^photo/(?P<photo_id>[0-9]+)/shrink/to/fit/(?P<width>[0-9]+)x(?P<height>[0-9]+)$", views.photo_shrink_to_fit),
-    url(r"^photo/(?P<photo_id>[0-9]+)/download$", views.photo_download)
+    url(r"^photo/(?P<photo_id>[0-9]+)/download$", views.photo_download, name="download-photo")
 ]
